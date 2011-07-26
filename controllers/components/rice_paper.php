@@ -1,4 +1,11 @@
 <?php
+
+/**
+ * Rice Paper CakePHP Component for easy image munipulation
+ *
+ * @package default
+ * @author Robert Ross
+ */
 class RicePaperComponent extends Object {
 	//called before Controller::beforeFilter()
 	function initialize(&$controller, $settings = array()) {
@@ -85,13 +92,31 @@ class RicePaperComponent extends Object {
 	 *
 	 * @param string $width 
 	 * @param string $height 
+	 * @param string $savePath 
+	 * @param string $maintainAspect Force width and height or retain the ration as best as possible
 	 * @return void
 	 * @author Robert Ross
 	 */
-	function resize($width, $height, $savePath){
-		$new_image = imagecreatetruecolor($width, $height);
+	function resize($width, $height, $savePath, $maintainAspect = true){
+		$oldWidth  = $this->getWidth();
+		$oldHeight = $this->getHeight();
 		
-		imagecopyresampled($new_image, $this->image, 0, 0, 0, 0, $width, $height, $this->getWidth(), $this->getHeight());
+		if($maintainAspect){
+			$oldRatio = $oldWidth / $oldHeight;
+			$newRatio = $width / $height;
+			
+			if($oldWidth <= $width && $oldHeight <= $height){
+				$width = $oldWidth;
+				$height = $oldHeight;
+			} else if($newRatio > $oldRatio){
+				$width = (int) $height * $oldRatio;
+			} else if ($newRatio < $oldRatio){
+				$height = (int) $width / $oldRatio;
+			}
+		}
+		
+		$new_image = imagecreatetruecolor($width, $height);
+		imagecopyresampled($new_image, $this->image, 0, 0, 0, 0, $width, $height, $oldWidth, $oldHeight);
 		
 		return $this->save($new_image, $savePath);
 	}
